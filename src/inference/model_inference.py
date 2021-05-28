@@ -64,9 +64,10 @@ if __name__ == '__main__':
     model_path = "/home/shtoshni/Research/fast-coref/models/joint_downsample_30K/model.pth"
     model = Inference(model_path)
     model.model.max_span_width = 10
-    doc = "The practice of referring to Voldemort as \"He Who Must Not Be Named\" might have begun when he used a " \
-          "Taboo. This is, however, unlikely because Dumbledore encouraged using his proper name so as to not fear " \
-          "the name. If saying the Dark Lord’s name would have endangered people, he would not have encouraged it."
+    doc = "Rafael Nadal is the champion at Roland-Garros for an unprecedented 13th time, his victory over " \
+          "world No.1 Novak Djokovic elevating him level with Roger Federer’s all-time mark of 20 major titles. " \
+          "The Spaniard delivered one of his finest performances against arguably his toughest rival to " \
+          "prevail 6-0, 6-2, 7-5 on Sunday."
     output_dict = model.perform_coreference(doc)
     print(output_dict["clusters"])
 

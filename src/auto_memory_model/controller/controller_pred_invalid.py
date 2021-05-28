@@ -24,11 +24,17 @@ class ControllerPredInvalid(BaseController):
 
         self.label_smoothing_loss_fn = LabelSmoothingLoss(smoothing=self.label_smoothing_wt, dim=1)
 
-    @staticmethod
-    def get_actions(pred_mentions, instance):
+    # @staticmethod
+    def get_actions(self, pred_mentions, instance):
         if "clusters" in instance:
-            mention_to_cluster = get_mention_to_cluster_idx(instance["clusters"])
-            return get_actions_unbounded_fast(pred_mentions, mention_to_cluster)
+            gt_clusters = instance["clusters"]
+            mention_to_cluster = get_mention_to_cluster_idx(gt_clusters)
+            if self.mem_type == 'unbounded':
+                return get_actions_unbounded_fast(pred_mentions, mention_to_cluster)
+            elif self.mem_type == 'learned':
+                return get_actions_learned_bounded(pred_mentions, gt_clusters, mention_to_cluster, self.max_ents)
+            elif self.mem_type == 'lru':
+                return get_actions_lru(pred_mentions, gt_clusters, mention_to_cluster, self.max_ents)
         else:
             return [(-1, 'i')] * len(pred_mentions)
 
@@ -48,8 +54,8 @@ class ControllerPredInvalid(BaseController):
                 else:
                     action_indices.append(self.max_ents)
 
-        # The first max_ents are all overwrites - We skip that part
-        if len(action_indices) > self.max_ents:
+        # The first (max_ents - 1) are all overwrites - We skip that part
+        if len(action_indices) >= self.max_ents:
             action_indices = action_indices[self.max_ents:]
             action_indices = torch.tensor(action_indices, device=self.device)
             return action_indices
@@ -61,10 +67,11 @@ class ControllerPredInvalid(BaseController):
 
         pred_mentions_list = pred_mentions.tolist()
         gt_actions = self.get_actions(pred_mentions_list, instance)
-
         metadata = self.get_metadata(instance)
 
-        coref_new_list = self.memory_net.forward_training(pred_mentions, mention_emb_list, gt_actions, metadata)
+        coref_new_list, new_ignore_list = self.memory_net.forward_training(
+            pred_mentions, mention_emb_list, gt_actions, metadata)
+
         if 'mention_loss' in train_vars:
             loss = {'total': train_vars['mention_loss'], 'entity': train_vars['mention_loss']}
 
@@ -72,6 +79,19 @@ class ControllerPredInvalid(BaseController):
                 coref_loss = self.calculate_coref_loss(coref_new_list, gt_actions)
                 loss['total'] += coref_loss
                 loss['coref'] = coref_loss
+
+                if len(new_ignore_list):
+                    new_ignore_tens = torch.stack(new_ignore_list, dim=0)
+                    new_ignore_indices = self.new_ignore_tuple_to_idx(gt_actions)
+                    # print(new_ignore_list)
+                    # print(new_ignore_indices)
+
+                    print(new_ignore_tens.shape)
+                    print(new_ignore_indices.shape)
+                    ignore_loss = torch.sum(self.label_smoothing_loss_fn(
+                        new_ignore_tens, torch.unsqueeze(new_ignore_indices, dim=1)))
+                    loss['ignore'] = ignore_loss
+                    loss['total'] += loss['ignore']
         else:
             loss = {'total': None}
 
@@ -80,7 +100,7 @@ class ControllerPredInvalid(BaseController):
     def forward(self, instance, teacher_forcing=False):
         metadata = self.get_metadata(instance)
 
-        action_list, pred_mentions_list, gt_actions, mention_scores = [], [], [], []
+        action_list, pred_mentions_list, gt_actions, mention_scores, new_ignore_list = [], [], [], [], []
         last_memory, token_offset = None, 0
 
         for idx in range(0, len(instance["sentences"])):

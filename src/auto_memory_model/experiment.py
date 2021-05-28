@@ -54,7 +54,7 @@ class Experiment:
         self.best_model_path = path.join(self.best_model_dir, 'model.pth')
 
         self.optimizer, self.optim_scheduler, self.scaler = {}, {}, None
-        self.train_info = {'val_perf': 0.0, 'global_steps': 0, 'num_stuck_evals': 0}
+        self.train_info = {'val_perf': 0.0, 'global_steps': 0, 'num_stuck_evals': 0, 'peak_memory': 0.0}
 
         # Prepare model
         if not self.eval_model:
@@ -256,10 +256,10 @@ class Experiment:
                 example_loss = handle_example(cur_example)
 
                 if self.train_info['global_steps'] % self.update_frequency == 0:
-                    logger.info('{} {:.3f} Max mem {:.3f} GB'.format(
-                        cur_example["doc_key"], example_loss,
-                        (torch.cuda.max_memory_allocated() / (1024 ** 3)) if torch.cuda.is_available() else 0.0)
-                    )
+                    peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 3) if torch.cuda.is_available() else 0.0
+                    logger.info('{} {:.3f} Max mem {:.3f} GB'.format(cur_example["doc_key"], example_loss, peak_memory))
+                    if self.train_info['peak_memory'] < peak_memory:
+                        self.train_info['peak_memory'] = peak_memory
                     torch.cuda.reset_peak_memory_stats()
 
                 if self.eval_per_k_steps and (self.train_info['global_steps'] % self.eval_per_k_steps == 0):
@@ -283,11 +283,11 @@ class Experiment:
 
                         avg_eval_time = eval_time['total_time']/eval_time['num_evals']
                         rem_time = self.slurm_time - eval_time['total_time']
-                        logging.info("Average eval time: %.2f mins, Remaining time: %.2f mins"
-                                     % (avg_eval_time/60, rem_time/60))
+                        logger.info("Average eval time: %.2f mins, Remaining time: %.2f mins"
+                                    % (avg_eval_time/60, rem_time/60))
 
                         if rem_time < avg_eval_time:
-                            logging.info('Canceling job as not much time left')
+                            logger.info('Canceling job as not much time left')
                             sys.exit()
 
             logger.handlers[0].flush()
@@ -553,7 +553,9 @@ class Experiment:
 
         # for split in ['test', 'dev', 'train']:
         perf_summary = {'model_dir': path.normpath(self.model_dir), 'best_perf': self.train_info['val_perf']}
-        logging.info("Validation performance: %.1f" % self.train_info['val_perf'])
+        logger.info("Validation performance: %.1f" % self.train_info['val_perf'])
+        if 'peak_memory' in self.train_info:
+            logger.info("Peak memory: %.1f" % self.train_info['peak_memory'])
 
         for split in ['test']:
             logger.info('\n')
@@ -579,7 +581,7 @@ class Experiment:
 
                 json.dump(output_dict, open(perf_file, 'w'), indent=2)
 
-                logging.info("Final performance summary at %s" % perf_file)
+                logger.info("Final performance summary at %s" % perf_file)
                 sys.stdout.flush()
 
         summary_file = path.join(self.model_dir, 'perf.json')
@@ -638,4 +640,4 @@ class Experiment:
                 save_dict['scheduler'][param_group] = self.optim_scheduler[param_group].state_dict()
 
         torch.save(save_dict, location)
-        logging.info(f"Model saved at: {location}")
+        logger.info(f"Model saved at: {location}")

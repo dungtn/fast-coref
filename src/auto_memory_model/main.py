@@ -63,11 +63,9 @@ def main():
                         choices=['learned_avg', 'wt_avg', 'max'], help='Entity representation.')
     parser.add_argument('-sim_func', default='hadamard', choices=['hadamard', 'cosine', 'endpoint'],
                         help='Similarity function', type=str)
-    parser.add_argument('-emb_size', default=20, type=int,
-                        help='Embedding size of features.')
+    parser.add_argument('-emb_size', default=20, type=int, help='Embedding size of features.')
     # Only relevant for bounded memory models
-    parser.add_argument('-max_ents', default=20, type=int,
-                        help="Number of maximum entities in memory.")
+    parser.add_argument('-max_ents', default=20, type=int, help="Number of maximum entities in memory.")
     parser.add_argument('-eval_max_ents', default=None, type=int,
                         help="Number of maximum entities in memory during inference.")
     # Dataset-specific features
@@ -130,7 +128,8 @@ def main():
     # Only include important options in hash computation
     imp_opts = ['model_size', 'max_segment_len',  # Encoder params
                 'ment_emb', 'max_span_width', 'top_span_ratio',  # Mention model
-                'mem_type', 'entity_rep', 'mlp_size',  # Memory params
+                'mem_type', 'max_ents',
+                'entity_rep', 'mlp_size',  # Memory params
                 'dropout_rate', 'seed', 'init_lr', 'lr_decay', 'max_evals',
                 'label_smoothing_wt', 'ment_loss', 'normalize_loss',
                 'num_ontonotes_docs', 'num_litbank_docs', 'num_preco_docs', 'num_train_docs',

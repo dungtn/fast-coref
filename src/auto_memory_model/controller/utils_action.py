@@ -23,14 +23,13 @@ def get_actions_unbounded_fast(pred_mentions, mention_to_cluster):
     return actions
 
 
-def get_actions_learned_bounded(pred_mentions, gt_clusters, max_ents):
+def get_actions_learned_bounded(pred_mentions, gt_clusters, mention_to_cluster, max_ents):
     # Useful data structures
     pred_mentions = [tuple(mention) for mention in pred_mentions]
-    mention_to_cluster = get_mention_to_cluster_idx(gt_clusters)
 
     actions = []
     cell_to_cluster = {}
-    cell_to_last_used = [0 for cell in range(max_ents)]  # Initialize last usage of cell
+    cell_to_last_used = [0 for _ in range(max_ents)]  # Initialize last usage of cell
     cluster_to_cell = {}
 
     # Initialize with all the mentions
@@ -102,11 +101,8 @@ def get_actions_learned_bounded(pred_mentions, gt_clusters, max_ents):
     return actions
 
 
-def get_actions_lru(pred_mentions, gt_clusters, max_ents):
+def get_actions_lru(pred_mentions, gt_clusters, mention_to_cluster, max_ents):
     pred_mentions = [tuple(mention) for mention in pred_mentions]
-
-    # Useful data structures
-    mention_to_cluster = get_mention_to_cluster_idx(gt_clusters)
 
     actions = []
     cell_to_cluster = {}
