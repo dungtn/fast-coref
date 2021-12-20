@@ -9,7 +9,7 @@
 module load cuda11/11.2.1
 module load cudnn/8.1-cuda_11.2
 #conda activate genre_env
-conda activate /home/dthai/miniconda3/envs/fast-coref
+conda activate /mnt/nfs/scratch1/dthai/envs
 source /mnt/nfs/scratch1/dthai/fast-coref/wandb_settings.sh
 export PYTHONPATH=/mnt/nfs/scratch1/dthai/fast-coref/src/:$PYTHONPATH
 
