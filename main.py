@@ -1,4 +1,5 @@
 import os
+import json
 import tqdm
 import wandb
 import argparse
@@ -19,12 +20,27 @@ def main(args):
     # run inference
     inp_fn = os.path.join(args.data_dir, args.filename)
     out_fn = os.path.join(args.out_dir, args.filename)
-    with jsonlines.open(out_fn, mode='w') as writer:
+    mode = 'w'
+    excluded_doc_ids = set()
+    # to skip over some doc ids, put them in the 
+    # `doc_ids.json` located in the output dir
+    doc_fn = os.path.join(args.out_dir, 'doc_ids.json')
+    if os.path.exists(doc_fn):
+        excluded_doc_ids = json.load(open(doc_fn))
+    # automatically skip over processed files
+    if os.path.exists(out_fn):
+        mode = 'a'
+        with jsonlines.open(out_fn) as reader:
+            for obj in tqdm.tqdm(reader):
+                excluded_doc_ids.add(int(obj['doc_id']))
+    with jsonlines.open(out_fn, mode=mode) as writer:
         with jsonlines.open(inp_fn) as reader:
             doc_id = 0
             doc = list()
             num_doc = 0
             for obj in tqdm.tqdm(reader):
+                if int(obj['doc_id']) in excluded_doc_ids:
+                    continue
                 if int(obj['doc_id']) == doc_id:
                     doc.append(obj['text'])
                 else:

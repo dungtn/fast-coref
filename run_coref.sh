@@ -1,10 +1,10 @@
 #! /bin/bash
-#SBATCH --job-name=fast-coref
+#SBATCH --job-name=fast-coref-wtn
 #SBATCH --output=logs/fast-coref-%A_%a.out
 #SBATCH --partition=rtx8000-short
 #SBATCH --gres=gpu:1
 #SBATCH --mem=80GB
-#SBATCH --array=0-1
+#SBATCH --array=0-3
 
 module load cuda11/11.2.1
 module load cudnn/8.1-cuda_11.2
@@ -19,5 +19,5 @@ export WANDB_DIR="./wandb_dir/"
 export TMPDIR="./tmp_dir/"
 export PYTHONUNBUFFERED=1
 
-CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES wandb agent dthai/fast-coref/t8air4tf
+CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES wandb agent dthai/fast-coref/1kq1hvpk
 
