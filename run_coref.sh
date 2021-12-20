@@ -1,12 +1,11 @@
 #! /bin/bash
 #SBATCH --job-name=fast-coref
 #SBATCH --output=logs/fast-coref-%A_%a.out
-#SBATCH --partition=titanx-long
-#SBATCH --time=07-00:00:00
-#SBATCH --mem=60G
-#SBATCH --array=0-16
+#SBATCH --partition=rtx8000-short
+#SBATCH --gres=gpu:1
+#SBATCH --mem=80GB
+#SBATCH --array=0-1
 
-source ~/.bashrc
 module load cuda11/11.2.1
 module load cudnn/8.1-cuda_11.2
 #conda activate genre_env
@@ -20,5 +19,5 @@ export WANDB_DIR="./wandb_dir/"
 export TMPDIR="./tmp_dir/"
 export PYTHONUNBUFFERED=1
 
-wandb agent dthai/fast-coref/yimnkgb5
+CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES wandb agent dthai/fast-coref/cfu3wdch
 

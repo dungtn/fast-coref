@@ -63,14 +63,11 @@ class Inference:
 		for idx_cluster in idx_clusters:
 			cur_cluster = []
 			for (ment_start, ment_end) in idx_cluster:
-				cur_cluster.append(((ment_start, ment_end),
+				cur_cluster.append(((subtoken_map[ment_start], subtoken_map[ment_end] + 1),
 				                    " ".join(orig_tokens[subtoken_map[ment_start]: subtoken_map[ment_end] + 1])))
-
-			clusters.append(cur_cluster)
-
-		return {"tokenized_doc": tokenized_doc, "clusters": clusters,
-		        "subtoken_idx_clusters": idx_clusters, "actions": pred_actions,
-		        "mentions": pred_mentions}
+			if len(cur_cluster) > 1:
+				clusters.append(cur_cluster)
+		return {"orig_tokens": orig_tokens, "clusters": clusters}
 
 
 if __name__ == '__main__':
