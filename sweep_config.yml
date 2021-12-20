@@ -1,0 +1,14 @@
+name: FastCoref
+program: main.py
+method: grid
+parameters:
+  data_dir:
+    value: '/mnt/nfs/scratch1/sdhuliawala/dpr_sentence_splits_genre_tagged_final/'
+  filename:
+    values: ['file_0-1-genre-coref.jsonl']
+  model_path:
+    value: '/mnt/nfs/scratch1/dthai/fast-coref/'
+  encoder_name:
+    value: 'shtoshni/longformer_coreference_joint'
+  use_wandb:
+    value: 1
