@@ -1,3 +1,7 @@
+*.pth
+.vscode
+.gitignore
+.pth
 models/
 lrec2020-coref/
 __pycache__/
