@@ -19,5 +19,5 @@ export WANDB_DIR="./wandb_dir/"
 export TMPDIR="./tmp_dir/"
 export PYTHONUNBUFFERED=1
 
-CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES wandb agent dthai/fast-coref/cfu3wdch
+CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES wandb agent dthai/fast-coref/t8air4tf
 
